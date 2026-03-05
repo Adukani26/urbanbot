@@ -1,0 +1,130 @@
+  # UrbanBot — Smart City Maintenance Platform
+
+A robotics control platform for smart city parcel and streetscape maintenance.
+
+---
+
+## Stack
+| Layer       | Technology                            |
+|-------------|---------------------------------------|
+| API         | Node.js + Fastify                     |
+| Realtime    | Socket.IO (WebSocket)                 |
+| Job Queue   | BullMQ + Redis                        |
+| MQTT        | Mosquitto broker (hardware bridge)    |
+| Database    | PostgreSQL + TimescaleDB              |
+| Infra       | Docker Compose + Nginx                |
+| Frontend    | Vanilla HTML/JS (swap for React/Vite) |
+
+---
+
+## Project Structure
+```
+urbanbot/
+├── backend/
+│   └── src/
+│       ├── index.js          # App entry point
+│       ├── services/db.js    # PostgreSQL connection
+│       ├── mqtt/client.js    # MQTT ↔ robot bridge
+│       ├── queues/jobQueue.js# BullMQ task scheduler
+│       └── routes/
+│           ├── zones.js      # City zone CRUD
+│           ├── jobs.js       # Job scheduling
+│           ├── telemetry.js  # Sensor data
+│           └── robot.js      # Direct robot commands
+├── frontend/
+│   └── index.html            # Ops dashboard
+├── infra/
+│   ├── init.sql              # DB schema + seed data
+│   ├── mosquitto.conf        # MQTT broker config
+│   └── nginx.conf            # Reverse proxy
+└── docker-compose.yml
+```
+
+---
+
+## Quick Start
+
+### 1. Clone and enter project
+```bash
+cd urbanbot
+```
+
+### 2. Start all services
+```bash
+docker compose up -d
+```
+This starts: PostgreSQL, TimescaleDB, Redis, Mosquitto MQTT, and the API server.
+
+### 3. Install backend dependencies
+```bash
+cd backend && npm install
+```
+
+### 4. Open the dashboard
+Open `frontend/index.html` directly in your browser.
+The dashboard runs in demo mode automatically if the API is not yet connected.
+
+---
+
+## API Reference
+
+### Robot Commands
+| Method | Endpoint               | Description               |
+|--------|------------------------|---------------------------|
+| POST   | /robot/command         | Send command to robot     |
+| POST   | /robot/emergency-stop  | Trigger emergency stop    |
+
+### Jobs
+| Method | Endpoint            | Description               |
+|--------|---------------------|---------------------------|
+| GET    | /jobs               | List all jobs             |
+| POST   | /jobs               | Schedule a new job        |
+| PATCH  | /jobs/:id/cancel    | Cancel a pending job      |
+
+### Zones
+| Method | Endpoint            | Description               |
+|--------|---------------------|---------------------------|
+| GET    | /zones              | List all city zones       |
+| POST   | /zones              | Create a zone             |
+| PUT    | /zones/:id          | Update a zone             |
+| DELETE | /zones/:id          | Delete a zone             |
+
+### Telemetry
+| Method | Endpoint               | Description                   |
+|--------|------------------------|-------------------------------|
+| GET    | /telemetry/latest      | Latest robot snapshot         |
+| GET    | /telemetry/history     | Time-series history (30 min)  |
+| POST   | /telemetry             | Ingest telemetry via HTTP     |
+
+---
+
+## Hardware Integration (MQTT)
+
+The robot hardware publishes to these MQTT topics:
+
+| Topic                   | Direction       | Payload                          |
+|-------------------------|-----------------|----------------------------------|
+| `urbanbot/telemetry`    | Robot → Server  | `{robot_id, battery, speed, lat, lng, status}` |
+| `urbanbot/status`       | Robot → Server  | `{status, message}`              |
+| `urbanbot/camera/frame` | Robot → Server  | `{frame: "<base64 jpeg>"}`       |
+| `urbanbot/command`      | Server → Robot  | `{action, params, timestamp}`    |
+
+Connect your robot to: `mqtt://<server-ip>:1883`
+
+---
+
+## Supported Task Types
+- `mow` — Cut vegetation in zone
+- `clear_cobblestones` — Remove plant growth from cobblestones
+- `scan` — Vegetation density scan
+- `patrol` — General zone surveillance
+
+---
+
+## Environment Variables
+```env
+PORT=3000
+REDIS_URL=redis://redis:6379
+DATABASE_URL=postgresql://urbanbot:urbanbot_secret@postgres:5432/urbanbot_db
+MQTT_BROKER=mqtt://mosquitto:1883
+```
