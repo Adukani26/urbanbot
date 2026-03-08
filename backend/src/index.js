@@ -13,6 +13,9 @@ import jobsRouter from './routes/jobs.js';
 import telemetryRouter from './routes/telemetry.js';
 import robotRouter from './routes/robot.js';
 
+import staticPlugin from '@fastify/static';
+import { resolve } from 'path';
+
 const app = Fastify({ logger: true });
 const httpServer = createServer(app.server);
 
@@ -21,6 +24,11 @@ export const io = new Server(httpServer, {
 });
 
 await app.register(cors, { origin: '*' });
+
+await app.register(staticPlugin, {
+  root: resolve('/app/../frontend'),
+  prefix: '/'
+});
 
 app.register(zonesRouter,    { prefix: '/zones' });
 app.register(jobsRouter,     { prefix: '/jobs' });

@@ -51,6 +51,7 @@ services:
       - mosquitto
     volumes:
       - ./backend:/app
+      - ./frontend:/frontend
       - /app/node_modules
     restart: unless-stopped
 
