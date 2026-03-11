@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>UrbanBot — City Maintenance Control</title>
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow:wght@300;400;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
   <style>
     :root {
@@ -296,16 +298,28 @@
     }
 
     /* Simulated city grid map */
-    .map-canvas {
-      width: 100%;
-      height: 100%;
-      background:
-        linear-gradient(rgba(0,229,160,0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,229,160,0.03) 1px, transparent 1px),
-        var(--panel);
-      background-size: 40px 40px;
-      position: relative;
-    }
+   .map-canvas {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#leafletMap {
+  width: 100%;
+  height: 100%;
+  background: var(--panel);
+  z-index: 1;
+}
+
+/* Dark filter over the map tiles to match our theme */
+.leaflet-tile {
+  filter: brightness(0.5) saturate(0.6) hue-rotate(160deg);
+}
+
+.leaflet-container {
+  background: var(--panel);
+  font-family: var(--mono);
+}
 
     .map-label {
       position: absolute;
@@ -620,6 +634,19 @@
       animation: pulse 1s infinite;
     }
 
+  /* Leaflet zone tooltip */
+.zone-tooltip {
+  background: var(--panel) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text-dim) !important;
+  font-family: var(--mono) !important;
+  font-size: 0.6rem !important;
+  letter-spacing: 0.1em !important;
+  box-shadow: none !important;
+  padding: 3px 8px !important;
+}
+
+.zone-tooltip::before { display: none !important; }
     /* Scrollbar */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -708,22 +735,22 @@
       <div class="zone-list" id="zoneList">
         <div class="zone-item active" data-zone="A">
           <div class="zone-priority p1"></div>
-          <div class="zone-name">Zone A — North Plaza</div>
+          <div class="zone-name">Phase 1 — Konza Complex</div>
           <div class="zone-badge">P1</div>
         </div>
         <div class="zone-item" data-zone="B">
           <div class="zone-priority p2"></div>
-          <div class="zone-name">Zone B — East Walkway</div>
+          <div class="zone-name">Phase 2 — University Area</div>
           <div class="zone-badge">P2</div>
         </div>
         <div class="zone-item" data-zone="C">
           <div class="zone-priority p3"></div>
-          <div class="zone-name">Zone C — Central Strip</div>
+          <div class="zone-name">Phase 3 - Central Strip</div>
           <div class="zone-badge">P1</div>
         </div>
         <div class="zone-item" data-zone="D">
           <div class="zone-priority p3"></div>
-          <div class="zone-name">Zone D — South Plots</div>
+          <div class="zone-name">Phase 4 — South Plots</div>
           <div class="zone-badge">P3</div>
         </div>
       </div>
@@ -734,18 +761,12 @@
   <!-- MAIN MAP -->
   <main class="main">
     <div class="map-area">
-      <div class="map-canvas" id="mapCanvas">
-        <div class="map-label">CITY MAP // LIVE OVERLAY</div>
-
-        <!-- Zone blocks -->
-        <div class="map-zone za"><span>Zone A</span></div>
-        <div class="map-zone zb"><span>Zone B</span></div>
-        <div class="map-zone zc"><span>Zone C</span></div>
-        <div class="map-zone zd"><span>Zone D</span></div>
-
-        <!-- Robot dot -->
-        <div class="robot-dot" id="robotDot" style="top:20%;left:12%"></div>
+     <div class="map-canvas" id="mapCanvas">
+  <div id="leafletMap"></div>
+  <div class="map-label" style="z-index:999;position:absolute;top:1rem;left:1rem">
+    KONZA CITY // LIVE MAP
       </div>
+     </div>
     </div>
 
     <!-- Command Bar -->
@@ -773,10 +794,10 @@
       <div class="form-group">
         <label class="form-label">Zone</label>
         <select class="form-control" id="jobZone">
-          <option value="1">Zone A — North Plaza</option>
-          <option value="2">Zone B — East Walkway</option>
-          <option value="3">Zone C — Central Strip</option>
-          <option value="4">Zone D — South Plots</option>
+          <option value="1">Phase 1 — Konza Complex</option>
+          <option value="2">Phase 2 — University Area</option>
+          <option value="3">Phase 3 — Central Strip</option>
+          <option value="4">Phase 4 — South Plots</option>
         </select>
       </div>
       <div class="form-group">
@@ -811,17 +832,17 @@
         <!-- Populated by JS -->
         <div class="job-item running">
           <div class="job-type">Mow Vegetation</div>
-          <div class="job-meta">Zone A — North Plaza</div>
+          <div class="job-meta">Phase 1— Konza Complex</div>
           <div class="job-status running">Running</div>
         </div>
         <div class="job-item pending">
           <div class="job-type">Clear Cobblestones</div>
-          <div class="job-meta">Zone B — East Walkway</div>
+          <div class="job-meta">Phase 2- University Area</div>
           <div class="job-status pending">Pending</div>
         </div>
         <div class="job-item completed">
           <div class="job-type">Zone Patrol</div>
-          <div class="job-meta">Zone C — Central Strip</div>
+          <div class="job-meta">Phase 3 - Central Strip</div>
           <div class="job-status completed">Completed</div>
         </div>
       </div>
@@ -932,37 +953,163 @@ function updateTelemetry(data) {
   if (data.lat && data.lng) moveRobotDot(data.lat, data.lng);
 }
 
+// ─── KONZA CITY COORDINATES ───────────────────────────────
+const KONZA_CENTER = [-1.7394, 37.1319];
+const KONZA_ZOOM   = 14;
+
+const ZONES = [
+  {
+    id: 'A',
+    name: 'Phase 1 — Konza Complex',
+    color: '#e03c3c',
+    bounds: [
+      [-1.7280, 37.1150],
+      [-1.7280, 37.1450],
+      [-1.7350, 37.1450],
+      [-1.7350, 37.1150],
+    ]
+  },
+  {
+    id: 'B',
+    name: 'Phase 2 — University Area',
+    color: '#f0a500',
+    bounds: [
+      [-1.7350, 37.1150],
+      [-1.7350, 37.1450],
+      [-1.7430, 37.1450],
+      [-1.7430, 37.1150],
+    ]
+  },
+  {
+    id: 'C',
+    name: 'Phase 3 — Central Strip',
+    color: '#00e5a0',
+    bounds: [
+      [-1.7430, 37.1150],
+      [-1.7430, 37.1450],
+      [-1.7510, 37.1450],
+      [-1.7510, 37.1150],
+    ]
+  },
+  {
+    id: 'D',
+    name: 'Phase 4 — South Plots',
+    color: '#5a7080',
+    bounds: [
+      [-1.7510, 37.1150],
+      [-1.7510, 37.1450],
+      [-1.7590, 37.1450],
+      [-1.7590, 37.1150],
+    ]
+  }
+];
+
+// ─── INIT LEAFLET MAP ─────────────────────────────────────
+let map, robotMarker, robotTrail = [];
+
+function initMap() {
+  map = L.map('leafletMap', {
+    center: KONZA_CENTER,
+    zoom: KONZA_ZOOM,
+    zoomControl: true,
+    attributionControl: false
+  });
+
+  // OpenStreetMap tiles
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+  }).addTo(map);
+
+  // Draw zone boundaries and markers
+  ZONES.forEach(zone => {
+    // Boundary polygon
+    L.polygon(zone.bounds, {
+      color:       zone.color,
+      fillColor:   zone.color,
+      fillOpacity: 0.1,
+      weight:      1.5,
+      dashArray:   '4 4'
+    }).addTo(map).bindTooltip(zone.name, {
+      permanent:  true,
+      direction:  'center',
+      className:  'zone-tooltip'
+    });
+
+    // Center marker
+    const center = [
+      (zone.bounds[0][0] + zone.bounds[2][0]) / 2,
+      (zone.bounds[0][1] + zone.bounds[2][1]) / 2
+    ];
+
+    L.circleMarker(center, {
+      radius:      6,
+      color:       zone.color,
+      fillColor:   zone.color,
+      fillOpacity: 0.9,
+      weight:      2
+    }).addTo(map);
+  });
+
+  // Robot marker
+  const robotIcon = L.divIcon({
+    className: '',
+    html: `<div style="
+      width:16px;height:16px;
+      border:2px solid #00e5a0;
+      transform:rotate(45deg);
+      background:rgba(0,229,160,0.2);
+      box-shadow:0 0 8px #00e5a0;
+    "></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8]
+  });
+
+  robotMarker = L.marker(KONZA_CENTER, { icon: robotIcon }).addTo(map);
+}
+
+// ─── MOVE ROBOT ON MAP ────────────────────────────────────
+function moveRobotDot(lat, lng) {
+  if (!map || !robotMarker) return;
+  const pos = [lat, lng];
+  robotMarker.setLatLng(pos);
+
+  // Draw trail
+  const trailDot = L.circleMarker(pos, {
+    radius:      3,
+    color:       '#00e5a0',
+    fillColor:   '#00e5a0',
+    fillOpacity: 0.3,
+    weight:      1
+  }).addTo(map);
+
+  robotTrail.push(trailDot);
+  if (robotTrail.length > 30) {
+    map.removeLayer(robotTrail.shift());
+  }
+}
+
 // ─── DEMO TELEMETRY (when no real robot) ─────────────────
 let demoBattery = 87;
-let demoX = 12, demoY = 20;
+let demoLat = -1.7478;
+let demoLng = 37.1319;
 
 function runDemo() {
   demoBattery = Math.max(10, demoBattery - Math.random() * 0.3);
-  demoX += (Math.random() - 0.5) * 2;
-  demoY += (Math.random() - 0.5) * 2;
-  demoX = Math.max(8, Math.min(80, demoX));
-  demoY = Math.max(10, Math.min(80, demoY));
+  demoLat += (Math.random() - 0.5) * 0.0003;
+  demoLng += (Math.random() - 0.5) * 0.0003;
 
   updateTelemetry({
     battery: Math.round(demoBattery),
-    speed: (Math.random() * 1.2).toFixed(1),
-    lat: -1.3570 + demoY * 0.0002,
-    lng: 37.0090 + demoX * 0.0002,
-    status: 'patrolling'
+    speed:   (Math.random() * 1.2).toFixed(1),
+    lat:     demoLat,
+    lng:     demoLng,
+    status:  'patrolling'
   });
 
-  // Add robot trail
-  const dot = document.createElement('div');
-  dot.className = 'trail-dot';
-  dot.style.left = `${demoX}%`;
-  dot.style.top = `${demoY}%`;
-  document.getElementById('mapCanvas').appendChild(dot);
-  setTimeout(() => dot.remove(), 5000);
-
-  addLog(`Telemetry update · bat:${Math.round(demoBattery)}% · spd:${(Math.random()*1.2).toFixed(1)}m/s`, 'info');
+  addLog(`Telemetry · bat:${Math.round(demoBattery)}% · spd:${(Math.random()*1.2).toFixed(1)}m/s`, 'info');
   renderDemoCamera();
 }
-setInterval(runDemo, 2500);
+
 
 // ─── ROBOT DOT ────────────────────────────────────────────
 function moveRobotDot(lat, lng) {
@@ -1149,8 +1296,13 @@ document.querySelectorAll('.zone-item').forEach(item => {
 });
 
 // ─── BOOT ─────────────────────────────────────────────────
-connectSocket();
-setInterval(drawTelemChart, 2000);
+initMap();
+setTimeout(() => {
+  connectSocket();
+  setInterval(runDemo, 2500);
+  setInterval(drawTelemChart, 2000);
+}, 500);
+
 </script>
 </body>
 </html>
