@@ -1,0 +1,35 @@
+import { KONZA_BOUNDS, DEMO } from './config.js';
+import { updateTelemetry } from './telemetry.js';
+import { addLog } from './ui.js';
+import { renderDemoCamera } from './camera.js';
+
+let demoBattery = DEMO.initialBattery;
+let demoLat     = DEMO.initialLat;
+let demoLng     = DEMO.initialLng;
+
+export function moveRobotDot(lat, lng) {
+  const { latMin, latMax, lngMin, lngMax } = KONZA_BOUNDS;
+  const x = ((lng - lngMin) / (lngMax - lngMin)) * 100;
+  const y = ((lat - latMin) / (latMax - latMin)) * 100;
+
+  const dot = document.getElementById('robotDot');
+  dot.style.left = `${Math.max(2, Math.min(95, x))}%`;
+  dot.style.top  = `${Math.max(2, Math.min(95, y))}%`;
+}
+
+export function runDemo() {
+  demoBattery = Math.max(10, demoBattery - Math.random() * 0.3);
+  demoLat    += (Math.random() - 0.5) * 0.0003;
+  demoLng    += (Math.random() - 0.5) * 0.0003;
+
+  updateTelemetry({
+    battery: Math.round(demoBattery),
+    speed:   (Math.random() * 1.2).toFixed(1),
+    lat:     demoLat,
+    lng:     demoLng,
+    status:  'patrolling'
+  });
+
+  addLog(`Telemetry · bat:${Math.round(demoBattery)}% · spd:${(Math.random()*1.2).toFixed(1)}m/s`, 'info');
+  renderDemoCamera();
+}
