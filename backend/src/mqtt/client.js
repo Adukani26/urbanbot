@@ -1,5 +1,6 @@
 import mqtt from 'mqtt';
-import { db } from '../services/db.js';
+import { db } from '../db/index.js';
+import { config } from '../config/index.js';
 
 let client;
 
@@ -11,7 +12,7 @@ const TOPICS = {
 };
 
 export const initMQTT = async (io) => {
-  client = mqtt.connect(process.env.MQTT_BROKER || 'mqtt://localhost:1883');
+  client = mqtt.connect(config.mqttBroker);
 
   client.on('connect', () => {
     console.log('✅ MQTT broker connected');

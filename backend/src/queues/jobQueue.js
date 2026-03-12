@@ -1,8 +1,14 @@
 import { Queue, Worker } from 'bullmq';
-import { db } from '../services/db.js';
+import { db } from '../db/index.js';
 import { publishCommand } from '../mqtt/client.js';
+import { config } from '../config/index.js';
 
-const connection = { host: 'redis', port: 6379 };
+// Parse Redis connection from config
+const redisUrl    = new URL(config.redisUrl);
+const connection  = {
+  host: redisUrl.hostname,
+  port: parseInt(redisUrl.port) || 6379,
+};
 
 export let jobQueue;
 
@@ -20,9 +26,9 @@ export const initQueues = async () => {
     );
 
     publishCommand({
-      action: 'start_job',
-      job_id: jobId,
-      zone_id: zoneId,
+      action:    'start_job',
+      job_id:    jobId,
+      zone_id:   zoneId,
       task_type: type,
       timestamp: new Date().toISOString()
     });
