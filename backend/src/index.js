@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import cors from '@fastify/cors';
-import 'dotenv/config';
+import dotenv from 'dotenv';
 
 import { initDB } from './services/db.js';
 import { initMQTT } from './mqtt/client.js';
@@ -14,7 +14,12 @@ import telemetryRouter from './routes/telemetry.js';
 import robotRouter from './routes/robot.js';
 
 import staticPlugin from '@fastify/static';
-import { resolve } from 'path';
+import { resolve,dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+dotenv.config({ path:resolve(__dirname, '../../.env') });
 
 const app = Fastify({ logger: true });
 const httpServer = createServer(app.server);
@@ -26,7 +31,7 @@ export const io = new Server(httpServer, {
 await app.register(cors, { origin: '*' });
 
 await app.register(staticPlugin, {
-  root: resolve('/app/../frontend'),
+  root: resolve(__dirname, '../frontend'),
   prefix: '/'
 });
 
