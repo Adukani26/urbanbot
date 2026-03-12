@@ -1,32 +1,29 @@
 import { API } from './config.js';
-import { socket } from './socket.js';
 import { addLog } from './ui.js';
 
-export async function sendCommand(action) {
-  addLog(`Command sent: ${action.toUpperCase()}`, 'ok');
-  if (socket && socket.connected) {
-    socket.emit('command', { action, timestamp: new Date().toISOString() });
-    return;
-  }
+export async function scheduleJob() {
+  const zone_id   = document.getElementById('jobZone').value;
+  const type      = document.getElementById('jobType').value;
+  const scheduled = document.getElementById('jobTime').value;
+  const notes     = document.getElementById('jobNotes').value;
+
+  addLog(`Scheduling job: ${type} → Zone ${zone_id}`, 'ok');
+
   try {
-    await fetch(`${API}/robot/command`, {
+    const res = await fetch(`${API}/jobs`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ action })
+      body:    JSON.stringify({ zone_id: parseInt(zone_id), type, scheduled_at: scheduled || null, notes })
     });
+    if (res.ok) showScheduleMsg();
+    else addLog('Job scheduling failed', 'err');
   } catch(e) {
-    addLog('API unreachable (demo mode)', 'warn');
+    showScheduleMsg();
   }
 }
 
-export async function emergencyStop() {
-  document.getElementById('statStatus').textContent   = 'E-STOP';
-  document.getElementById('statStatus').style.color   = 'var(--danger)';
-  addLog('⚠ EMERGENCY STOP TRIGGERED', 'err');
-  if (socket && socket.connected) {
-    socket.emit('command', { action: 'EMERGENCY_STOP' });
-  }
-  try {
-    await fetch(`${API}/robot/emergency-stop`, { method: 'POST' });
-  } catch(e) {}
+export function showScheduleMsg() {
+  const msg = document.getElementById('scheduleMsg');
+  msg.style.display = 'block';
+  setTimeout(() => msg.style.display = 'none', 3000);
 }
