@@ -15,5 +15,5 @@ export function updateTelemetry(data) {
   if (batteryHistory.length > 50) batteryHistory.shift();
   drawTelemChart(batteryHistory);
 
-  if (data.lat && data.lng) moveRobotDot(data.lat, data.lng);
+  // if (data.lat && data.lng) moveRobotDot(data.lat, data.lng);
 }
