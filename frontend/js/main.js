@@ -1,5 +1,5 @@
 import { connectSocket } from './socket.js';
-import { runDemo } from './map.js';
+import { runDemo, initZoneHighlight } from './map.js';
 import { batteryHistory } from './telemetry.js';
 import { drawTelemChart, updateClock, initZoneSelection, switchTab } from './ui.js';
 import { sendCommand, emergencyStop } from './commands.js';
@@ -23,3 +23,5 @@ setTimeout(() => {
   setInterval(runDemo, 2500);
   setInterval(() => drawTelemChart(batteryHistory), 2000);
 }, 500);
+
+initZoneHighlight();
